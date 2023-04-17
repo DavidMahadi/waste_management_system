@@ -5,6 +5,17 @@ from rest_framework import serializers
 from .models import *
 from django.contrib.auth.hashers import check_password
 
+from django.contrib.auth import get_user_model
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.encoding import force_bytes
+from django.utils.http import urlsafe_base64_encode
+from django.core.mail import send_mail
+from rest_framework import serializers
+from allauth.account.models import EmailConfirmation, EmailConfirmationHMAC
+from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
 
 class RegisterUserSerializer(serializers.ModelSerializer):
     password1 = serializers.CharField(
@@ -103,3 +114,40 @@ class ResetPasswordSerializer(serializers.Serializer):
     class Meta:
         model = User
         fields = ('old_password', 'password1', 'password2')
+
+
+class VerifyEmailView(APIView):
+    def get(self, request, *args, **kwargs):
+        key = kwargs.get('key')
+        email_confirmation = EmailConfirmation.objects.filter(key=key).first()
+        if email_confirmation:
+            email_address = email_confirmation.email_address
+            email_address.verified = True
+            email_address.user.is_active = True
+            email_address.user.save()
+            email_address.save()
+            return Response({'detail': 'Email verified successfully.'}, status=status.HTTP_200_OK)
+        else:
+            return Response({'detail': 'Invalid verification key.'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
+class PaymentSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Payment
+        fields = ['id', 'user', 'waste_type', 'waste_quantity', 'amount', 'created_at', 'updated_at']
+
+
+class WasteSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Waste
+        fields = ['id', 'user', 'waste_type', 'quantity', 'waste_frequency', 'disposal_cost']
+
+
+class SupportSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Support
+        fields = ['id', 'name', 'email', 'phone_number', 'message']
