@@ -28,6 +28,8 @@ class User(AbstractUser):
     property_number = models.CharField(max_length=200, null=True, blank=True)
     gender = models.CharField(max_length=3, choices=USER_GENDER, default='M')
     age = models.IntegerField()
+    is_verified=models.CharField(max_length=500, blank=True)
+    email_otp=models.PositiveSmallIntegerField()
 
     def __str__(self):
         return self.first_name +'  '+  self.user_type

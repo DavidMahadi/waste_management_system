@@ -141,9 +141,7 @@ EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'dvdnnkr@gmail.com'
-EMAIL_HOST_PASSWORD = 'dvdnnkr@gmail.com123'
-
-SITE_ID = 1
+EMAIL_HOST_USER = 'badmannkr@gmail.com'
+EMAIL_HOST_PASSWORD = 'nnphetkzcvojmkit'
 
 ACCOUNT_EMAIL_CONFIRMATION_EXPIRE_DAYS = 1

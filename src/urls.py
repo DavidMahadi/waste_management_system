@@ -1,11 +1,12 @@
 from django.contrib import admin
 from django.urls import path, include, re_path
 from knox import views as knox_views
-from . import views
 from django.urls import path, include
 from rest_framework import permissions
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
+from src.views import *
+from src.utils import generate_otp
 
 
 schema_view = get_schema_view(
@@ -24,18 +25,20 @@ schema_view = get_schema_view(
 # Project Urls
 
 urlpatterns = [
-    path('register_employee', views.Employee_register, name='register_employee'),
-    path('register_customer', views.Customer_register, name='register_customer'),
-    path('login', views.login, name='login'),
-    path('verify-email/<str:key>/', VerifyEmailView.as_view(), name='verify_email'),
-    path('customer', views.customer_view, name='customer-view'),
-    path('employee', views.employee_view, name='employee-view'),
-    path('reset_password', views.reset_password, name='reset-password'),
+    path('register_employee', Employee_register, name='register_employee'),
+    path('register_customer', Customer_register, name='register_customer'),
+    path('login', login, name='login'),
+    # path('verify-email/', verify_account, name='verify_email'),
+    path('customer', customer_view, name='customer-view'),
+    path('employee', employee_view, name='employee-view'),
+    path('reset_password', reset_password, name='reset-password'),
     path('logout', knox_views.LogoutView.as_view(), name='logout'),
     path('logoutall', knox_views.LogoutAllView.as_view(), name='logoutall'),
-    path('Payment', views.Payment, name='Payment'),
+    path('Payment', Payment, name='Payment'),
+    path('generate_otp', generate_otp, name='generate_otp'),
 
-    path('payments/', views.Payment, name='payment-list'),
+
+    path('payments/', Payment, name='payment-list'),
     # path('payments/<int:pk>/', views.payment_detail, name='payment-detail'),
 
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
