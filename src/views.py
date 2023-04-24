@@ -11,6 +11,7 @@ from rest_framework.authtoken.serializers import AuthTokenSerializer
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.contrib.auth.models import User
+from src.utils import generate_otp
 
 
 EMPLOYEE = 'Employee'
@@ -49,23 +50,33 @@ def Customer_register(request):
     serializer.is_valid(raise_exception=True)
     user = serializer.save()
 
-    _, token = AuthToken.objects.create(user)
+    # Generate OTP and store in cache
+    otp = generate_otp()
+    current_user=User.objects.get(pk=user.id)
+    current_user.email_otp=otp
 
-    current_user = serializer.instance
-    if current_user.user_type == CUSTOMER:
-        current_user.is_staff=False
-        current_user.save()
+    send_otp_email(user.email, otp)
 
-    return Response(
-        {
-            "user_infos": {
-                "id": user.id,
-                "username": user.username,
-                "email": user.email,
-            },
-            "message": "Account Created Successfully.",
-        }
-    )
+    # Update response with message to check email
+    response_data = {
+        "message": "Please check your email for the OTP to activate your account."
+    }
+
+    return Response(response_data)
+
+@api_view(["POST"])
+def verify_email_otp(request, email):
+    user = User.objects.get(email=email)
+    otp = request.POST.get('otp')
+
+    if user.email_otp == otp:
+        user.is_verified = True
+        user.email_otp = ''
+        user.save()
+
+        return Response({"message": "brabrabra"}, status=status.HTTP_200_OK)
+    return Response({"message": "otp not much"}, status=status.HTTP_400_BAD_REQUEST)
+    
 
 
 @api_view(["POST"])

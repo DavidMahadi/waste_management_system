@@ -13,9 +13,9 @@ class User(AbstractUser):
     )
 
     USER_GENDER = (
-        ("M",'Male'),
-        ("F",'Female'),
-        ("O",'Others'),
+        ("Male",'Male'),
+        ("Female",'Female'),
+        ("Others",'Others'),
     )
     user_type = models.CharField(max_length=200, choices=USER_TYPE_CHOICES, default="CUSTOMER")
     phone_number = models.CharField(max_length=200, null=True, blank=True)
@@ -26,10 +26,10 @@ class User(AbstractUser):
     sector = models.CharField(max_length=200, null=True, blank=True)
     cell = models.CharField(max_length=200, null=True, blank=True)
     property_number = models.CharField(max_length=200, null=True, blank=True)
-    gender = models.CharField(max_length=3, choices=USER_GENDER, default='M')
-    age = models.IntegerField()
-    is_verified=models.CharField(max_length=500, blank=True)
-    email_otp=models.PositiveSmallIntegerField()
+    gender = models.CharField(max_length=200, choices=USER_GENDER, default='Male')
+    age = models.IntegerField(null=True)
+    is_verified=models.CharField(max_length=500, default=False)
+    email_otp=models.CharField(max_length=500, blank=True)
 
     def __str__(self):
         return self.first_name +'  '+  self.user_type

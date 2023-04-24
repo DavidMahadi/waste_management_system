@@ -42,7 +42,7 @@ class RegisterUserSerializer(serializers.ModelSerializer):
             "property_number",
             "gender",
             "age",
-
+            
         )
         extra_kwargs = {
             "first_name": {"required": True},
@@ -67,6 +67,8 @@ class RegisterUserSerializer(serializers.ModelSerializer):
             "property_number": {"required": True},
             "gender": {"required": True},
             "age": {"required": True},
+            
+            
         }
 
     def validate(self, attrs):

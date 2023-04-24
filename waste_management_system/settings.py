@@ -46,7 +46,8 @@ INSTALLED_APPS = [
     "knox",
     "drf_yasg",
     "src",
-]
+    ]
+
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -88,6 +89,17 @@ DATABASES = {
         "NAME": BASE_DIR / "db.sqlite3",
     }
 }
+
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql_psycopg2',
+#         'NAME': 'railway',
+#         'USER': 'postgres',
+#         'PASSWORD': 'mypassword',
+#         'HOST': 'containers-us-west-46.railway.app',
+#         'PORT': '5432',
+#     }
+# }
 
 
 # Password validation

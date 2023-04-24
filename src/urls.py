@@ -34,13 +34,11 @@ urlpatterns = [
     path('reset_password', reset_password, name='reset-password'),
     path('logout', knox_views.LogoutView.as_view(), name='logout'),
     path('logoutall', knox_views.LogoutAllView.as_view(), name='logoutall'),
-    path('Payment', Payment, name='Payment'),
     path('generate_otp', generate_otp, name='generate_otp'),
+    path('verify-email-otp/<str:email>', verify_email_otp, name='verify-email-otp'),
 
 
     path('payments/', Payment, name='payment-list'),
-    # path('payments/<int:pk>/', views.payment_detail, name='payment-detail'),
-
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc')
 ]

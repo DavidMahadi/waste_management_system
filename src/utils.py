@@ -1,29 +1,24 @@
 import random
+from django.conf import settings
 from django.core.mail import send_mail
-from rest_framework import status
-from rest_framework.response import Response
-from rest_framework.decorators import api_view
 
 
-@api_view(['POST'])
-def generate_otp(request):
-    """Generate a six-digit OTP and send it to user's email"""
-    email = request.data.get('email')
-    if not email:
-        return Response({'error': 'Email is required.'}, status=status.HTTP_400_BAD_REQUEST)
+def generate_otp():
+    # Generate a list of 6 random digits
+    digits = [random.randint(0, 9) for _ in range(6)]
+    
+    # Convert the digits to a string and return
+    return ''.join(map(str, digits))
 
-    digits = "0123456789"
-    otp = ""
-    for i in range(6):
-        otp += random.choice(digits)
 
-    # Send the OTP to the user's email
-    send_mail(
-        subject='Your OTP for email verification',
-        message=f'Your OTP is: {otp}',
-        from_email='badmannkr@example.com',
-        recipient_list=[email],
-        fail_silently=False,
-    )
-
-    return Response({'message': 'OTP has been sent to your email.'})
+def send_otp_email(email,otp):
+    try:
+        subject = 'Test email'
+        message = f'This is a test email from Django, this is OTP {otp}'
+        from_email = settings.EMAIL_HOST_USER
+        recipient_list = [email]
+        send_mail(subject, message, from_email, recipient_list, fail_silently=False)
+    except Exception as e:
+        print(e)
+        return False
+    return True
