@@ -39,15 +39,11 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "rest_framework",
     "django_otp.plugins.otp_email",
-    "django.contrib.sites",
     "allauth",
-    "allauth.account",
-    "allauth.socialaccount",
     "knox",
     "drf_yasg",
     "src",
     ]
-
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -148,6 +144,7 @@ REST_FRAMEWORK = {
 }
 
 AUTH_USER_MODEL = 'src.User'
+
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'

@@ -66,15 +66,22 @@ def Customer_register(request):
 @api_view(["POST"])
 def verify_email_otp(request, email):
     user = User.objects.get(email=email)
-    otp = request.POST.get('otp')
+    otp = request.data.get('otp')
 
     if user.email_otp == otp:
         user.is_verified = True
         user.email_otp = ''
         user.save()
 
-        return Response({"message": "brabrabra"}, status=status.HTTP_200_OK)
-    return Response({"message": "otp not much"}, status=status.HTTP_400_BAD_REQUEST)
+        response_data = {
+            "message": "Your account has been actiated."
+        }
+        return Response(response_data, status=status.HTTP_200_OK)
+    
+    response_data = {
+        "message": "The OTP you entered is invalid."
+    }
+    return Response(response_data, status=status.HTTP_400_BAD_REQUEST)
     
 
 
