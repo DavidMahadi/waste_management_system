@@ -11,7 +11,7 @@ from rest_framework.authtoken.serializers import AuthTokenSerializer
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.contrib.auth.models import User
-from src.utils import generate_otp
+from src.utils import *
 
 
 EMPLOYEE = 'Employee'
@@ -52,8 +52,7 @@ def Customer_register(request):
 
     # Generate OTP and store in cache
     otp = generate_otp()
-    current_user=User.objects.get(pk=user.id)
-    current_user.email_otp=otp
+    user.email_otp = otp  # set the OTP on the user object returned by serializer.save()
 
     send_otp_email(user.email, otp)
 
