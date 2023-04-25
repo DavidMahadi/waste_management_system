@@ -135,10 +135,10 @@ class VerifyEmailView(APIView):
 
 
 
-class PaymentSerializer(serializers.ModelSerializer):
+class Client_ViewSerializer(serializers.ModelSerializer):
 
     class Meta:
-        model = Payment
+        model = Client_View
         fields = ['id', 'user', 'waste_type', 'waste_quantity', 'amount', 'created_at', 'updated_at']
 
 

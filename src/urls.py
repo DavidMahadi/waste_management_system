@@ -28,7 +28,6 @@ urlpatterns = [
     path('register_employee', Employee_register, name='register_employee'),
     path('register_customer', Customer_register, name='register_customer'),
     path('login', login, name='login'),
-    # path('verify-email/', verify_account, name='verify_email'),
     path('customer', customer_view, name='customer-view'),
     path('employee', employee_view, name='employee-view'),
     path('reset_password', reset_password, name='reset-password'),
@@ -38,7 +37,6 @@ urlpatterns = [
     path('verify-email/<str:email>/', verify_email_otp, name='verify_email_otp'),
 
 
-    path('payments/', Payment, name='payment-list'),
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc')
 ]

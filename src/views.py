@@ -104,11 +104,19 @@ def login(request):
         }
     )
 
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def customer_view(request):
-    # Your view code here
-    return Response({'message': 'Hello, Client View!'})
+    # Check if user is a customer
+    if request.user.user_type == 'CUSTOMER':
+        # Display a list of services for the customer to choose from
+        services = ['Service 1', 'Service 2', 'Service 3']
+        return Response({'services': services})
+    else:
+        # User is not a customer
+        return Response({'message': 'You are not authorized to view this page.'})
+
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -157,3 +165,13 @@ def reset_password(request):
     new_auth_token = AuthToken.objects.create(user=user)
     
     return Response({'detail': 'Password reset successful.', 'token': new_auth_token.token}, status=status.HTTP_200_OK)
+
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def order_history(request):
+    user = request.user
+    orders = Order.objects.filter(user=user)
+    serializer = OrderSerializer(orders, many=True)
+    return Response(serializer.data)
