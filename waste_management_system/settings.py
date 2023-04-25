@@ -40,6 +40,8 @@ INSTALLED_APPS = [
     "rest_framework",
     "django_otp.plugins.otp_email",
     "allauth",
+    "allauth.account",
+    "allauth.socialaccount",
     "knox",
     "drf_yasg",
     "src",

@@ -35,6 +35,7 @@ class User(AbstractUser):
         return self.first_name +'  '+  self.user_type
 
 
+
 class Client_View(models.Model):
     WASTE_TYPE_CHOICES = (
         ("Organic waste",'Organic waste'),

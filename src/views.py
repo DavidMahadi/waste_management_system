@@ -12,6 +12,8 @@ from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.contrib.auth.models import User
 from src.utils import *
+from src.models import User
+from django.contrib.auth import get_user_model
 
 
 EMPLOYEE = 'Employee'
@@ -50,39 +52,49 @@ def Customer_register(request):
     serializer.is_valid(raise_exception=True)
     user = serializer.save()
 
-    # Generate OTP and store in cache
     otp = generate_otp()
-    user.email_otp = otp  # set the OTP on the user object returned by serializer.save()
+
+    user.email_otp = otp
+    user.save()
 
     send_otp_email(user.email, otp)
 
-    # Update response with message to check email
     response_data = {
         "message": "Please check your email for the OTP to activate your account."
     }
 
     return Response(response_data)
 
+
+User = get_user_model()
+
 @api_view(["POST"])
 def verify_email_otp(request, email):
-    user = User.objects.get(email=email)
+    try:
+        user = User.objects.get(email=email)
+    except User.DoesNotExist:
+        response_data = {"error": "User not found."}
+        return Response(response_data, status=status.HTTP_404_NOT_FOUND)
+
     otp = request.data.get('otp')
 
-    if user.email_otp == otp:
-        user.is_verified = True
-        user.email_otp = ''
-        user.save()
+    if not otp:
+        response_data = {"error": "OTP not provided."}
+        return Response(response_data, status=status.HTTP_400_BAD_REQUEST)
 
-        response_data = {
-            "message": "Your account has been actiated."
-        }
-        return Response(response_data, status=status.HTTP_200_OK)
-    
-    response_data = {
-        "message": "The OTP you entered is invalid."
-    }
-    return Response(response_data, status=status.HTTP_400_BAD_REQUEST)
-    
+    if user.email_otp != otp:
+        response_data = {"error": "Invalid OTP."}
+        return Response(response_data, status=status.HTTP_400_BAD_REQUEST)
+
+    user.is_verified = True
+    user.email_otp = ''
+    user.save()
+
+    response_data = {"message": "Your account has been activated."}
+    return Response(response_data, status=status.HTTP_200_OK)
+
+
+
 
 
 @api_view(["POST"])
@@ -104,19 +116,35 @@ def login(request):
         }
     )
 
+# @api_view(["POST"])
+# def login(request):
+#     serializer = AuthTokenSerializer(data=request.data)
+#     serializer.is_valid(raise_exception=True)
+
+#     user = serializer.validated_data["user"]
+
+#     # Check if email OTP is verified
+#     if not user.email_verified:
+#         return Response({"message": "Email is not verified yet."})
+
+#     _, token = AuthToken.objects.create(user)
+
+#     return Response(
+#         {
+#             "user_info": {
+#                 "id": user.id,
+#                 "username": user.username,
+#             },
+#             "token": token,
+#         }
+#     )
+
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def customer_view(request):
-    # Check if user is a customer
-    if request.user.user_type == 'CUSTOMER':
-        # Display a list of services for the customer to choose from
-        services = ['Service 1', 'Service 2', 'Service 3']
-        return Response({'services': services})
-    else:
-        # User is not a customer
-        return Response({'message': 'You are not authorized to view this page.'})
-
+    # Your view code here
+    return Response({'message': 'Hello, Client View!'})
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])

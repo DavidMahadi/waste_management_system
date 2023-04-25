@@ -118,19 +118,7 @@ class ResetPasswordSerializer(serializers.Serializer):
         fields = ('old_password', 'password1', 'password2')
 
 
-class VerifyEmailView(APIView):
-    def get(self, request, *args, **kwargs):
-        key = kwargs.get('key')
-        email_confirmation = EmailConfirmation.objects.filter(key=key).first()
-        if email_confirmation:
-            email_address = email_confirmation.email_address
-            email_address.verified = True
-            email_address.user.is_active = True
-            email_address.user.save()
-            email_address.save()
-            return Response({'detail': 'Email verified successfully.'}, status=status.HTTP_200_OK)
-        else:
-            return Response({'detail': 'Invalid verification key.'}, status=status.HTTP_400_BAD_REQUEST)
+
 
 
 
