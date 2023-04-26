@@ -8,8 +8,8 @@ from django.conf import settings
 
 class User(AbstractUser):
     USER_TYPE_CHOICES = (
-        ("Customer", "Customer"),
-        ("Employee", "Employee"),
+        ("customer", "customer"),
+        ("employee", "employee"),
     )
 
     USER_GENDER = (
@@ -17,7 +17,7 @@ class User(AbstractUser):
         ("Female",'Female'),
         ("Others",'Others'),
     )
-    user_type = models.CharField(max_length=200, choices=USER_TYPE_CHOICES, default="CUSTOMER")
+    user_type = models.CharField(max_length=200, choices=USER_TYPE_CHOICES, default="customer")
     phone_number = models.CharField(max_length=200, null=True, blank=True)
     second_number = models.CharField(max_length=200, null=True, blank=True)
     national_id = models.CharField(max_length=200, null=True, blank=True)

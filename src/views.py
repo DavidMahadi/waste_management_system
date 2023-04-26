@@ -33,6 +33,14 @@ def Employee_register(request):
         current_user.is_staff = True
         current_user.save()
 
+    otp = generate_otp()
+
+    user.email_otp = otp
+    user.save()
+
+    send_otp_email(user.email, otp)
+
+
     return Response(
         {
             "user_infos": {
@@ -40,7 +48,8 @@ def Employee_register(request):
                 "username": user.username,
                 "email": user.email,
             },
-            "message": "Account Created Successfully.",
+            "message": "Please check your email for the OTP to activate your account."
+            
         }
     )
 
@@ -122,16 +131,29 @@ def login(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def customer_view(request):
-    # Your view code here
-    return Response({'message': 'Hello, Client View!'})
+    user = request.user
+    if user.is_staff:
+        return Response({"message": "Get Authenticated First"})
+    elif user.user_type != 'customer':
+        return Response({"message": "Access Forbidden"})
+    else:
+        # Your view code here
+        return Response({'message': 'Hello, Client View!'})
+
+        
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def employee_view(request):
-    if request.user.is_staff != True:
-            return Response({"message": "Get Authenticated First"})
-    # Your view code here
-    return Response({'message': 'Hello, Employee View!'})
+    user = request.user
+    if not user.is_staff:
+        return Response({"message": "Get Authenticated First"})
+    elif user.user_type != 'employee':
+        return Response({"message": "Access Forbidden"})
+    else:
+        # Your view code here
+        return Response({'message': 'Hello, Employee View!'})
+
 
 
 @api_view(['POST'])
