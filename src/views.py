@@ -97,35 +97,12 @@ def verify_email_otp(request, email):
 
 
 
-@api_view(["POST"])
-def login(request):
-    serializer = AuthTokenSerializer(data=request.data)
-    serializer.is_valid(raise_exception=True)
-
-    user = serializer.validated_data["user"]
-
-    _, token = AuthToken.objects.create(user)
-
-    return Response(
-        {
-            "user_info": {
-                "id": user.id,
-                "username": user.username,
-            },
-            "token": token,
-        }
-    )
-
 # @api_view(["POST"])
 # def login(request):
 #     serializer = AuthTokenSerializer(data=request.data)
 #     serializer.is_valid(raise_exception=True)
 
 #     user = serializer.validated_data["user"]
-
-#     # Check if email OTP is verified
-#     if not user.email_verified:
-#         return Response({"message": "Email is not verified yet."})
 
 #     _, token = AuthToken.objects.create(user)
 
@@ -138,6 +115,29 @@ def login(request):
 #             "token": token,
 #         }
 #     )
+
+@api_view(["POST"])
+def login(request):
+    serializer = AuthTokenSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+
+    user = serializer.validated_data["user"]
+
+    # Check if email OTP is verified
+    if not user.is_verified:
+        return Response({"message": "Email is not verified yet."})
+
+    _, token = AuthToken.objects.create(user)
+
+    return Response(
+        { 
+            "user_info": {
+                "id": user.id,
+                "username": user.username,
+            },
+            "token": token,
+        }
+    )
 
 
 @api_view(['GET'])
