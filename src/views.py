@@ -14,11 +14,14 @@ from django.contrib.auth.models import User
 from src.utils import *
 from src.models import User
 from django.contrib.auth import get_user_model
+from drf_yasg.utils import swagger_auto_schema
 
 
 EMPLOYEE = 'Employee'
 CUSTOMER = 'Customer'
 
+
+@swagger_auto_schema(methods=['post'], request_body=RegisterUserSerializer)
 @api_view(["POST"])
 def Employee_register(request):
     user_type = request.data.get("user_type", None)
@@ -53,7 +56,7 @@ def Employee_register(request):
         }
     )
 
-
+@swagger_auto_schema(methods=['post'], request_body=RegisterUserSerializer)
 @api_view(["POST"])
 def Customer_register(request):
     user_type = request.data.get("user_type", None)
@@ -76,7 +79,7 @@ def Customer_register(request):
 
 
 User = get_user_model()
-
+# @swagger_auto_schema(methods=['post'], request_body=RegisterUserSerializer)
 @api_view(["POST"])
 def verify_email_otp(request, email):
     try:
@@ -103,7 +106,7 @@ def verify_email_otp(request, email):
     return Response(response_data, status=status.HTTP_200_OK)
 
 
-
+@swagger_auto_schema(methods=['post'], request_body=AuthTokenSerializer)
 @api_view(["POST"])
 def login(request):
     serializer = AuthTokenSerializer(data=request.data)
@@ -127,7 +130,7 @@ def login(request):
         }
     )
 
-
+# @swagger_auto_schema(methods=['post'], request_body=AuthTokenSerializer)
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def customer_view(request):
@@ -140,8 +143,8 @@ def customer_view(request):
         # Your view code here
         return Response({'message': 'Hello, Client View!'})
 
-        
 
+# @swagger_auto_schema(methods=['post'], request_body=AuthTokenSerializer)
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def employee_view(request):
@@ -155,7 +158,7 @@ def employee_view(request):
         return Response({'message': 'Hello, Employee View!'})
 
 
-
+# @swagger_auto_schema(methods=['post'], request_body=AuthTokenSerializer)
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def reset_password(request):
@@ -196,7 +199,7 @@ def reset_password(request):
     return Response({'detail': 'Password reset successful.', 'token': new_auth_token.token}, status=status.HTTP_200_OK)
 
 
-
+# @swagger_auto_schema(methods=['post'], request_body=AuthTokenSerializer)
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def order_history(request):
