@@ -78,10 +78,11 @@ def Customer_register(request):
     return Response(response_data)
 
 
-User = get_user_model()
 # @swagger_auto_schema(methods=['post'], request_body=RegisterUserSerializer)
 @api_view(["POST"])
 def verify_email_otp(request, email):
+    User = get_user_model()
+
     try:
         user = User.objects.get(email=email)
     except User.DoesNotExist:
@@ -149,7 +150,7 @@ def customer_view(request):
 @permission_classes([IsAuthenticated])
 def employee_view(request):
     user = request.user
-    if not user.is_staff:
+    if user.is_staff== True:
         return Response({"message": "Get Authenticated First"})
     elif user.user_type != 'employee':
         return Response({"message": "Access Forbidden"})
