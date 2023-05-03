@@ -36,7 +36,7 @@ class User(AbstractUser):
 
 
 
-class Client_View(models.Model):
+class ClientView(models.Model):
     WASTE_TYPE_CHOICES = (
         ("Organic waste",'Organic waste'),
         ("In Organic waste",'In Organic waste'),
@@ -46,7 +46,7 @@ class Client_View(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='payments')
     waste_type = models.CharField(max_length=200, choices=WASTE_TYPE_CHOICES, default='Organic waste')
     waste_quantity = models.IntegerField()
-    cost_to_pay = models.DecimalField(max_digits=10, decimal_places=2)
+    cost_to_pay = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -67,6 +67,13 @@ class Client_View(models.Model):
         total_price = price_per_unit * self.waste_quantity
         return total_price
 
+    def save(self, *args, **kwargs):
+        if not self.cost_to_pay:
+            # Calculate the cost_to_pay if it hasn't been set yet
+            self.cost_to_pay = self.calculate_price()
+        super().save(*args, **kwargs)
+
+
 class Waste(models.Model):
     WASTE_TYPE_CHOICES = (
         ("Organic waste",'Organic waste'),
@@ -76,6 +83,7 @@ class Waste(models.Model):
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     waste_type = models.CharField(max_length=100, choices=WASTE_TYPE_CHOICES)
+    date = models.DateField(auto_now=True)
     quantity = models.DecimalField(max_digits=10, decimal_places=2)
     waste_frequency = models.IntegerField()
     disposal_cost = models.DecimalField(max_digits=10, decimal_places=2)
@@ -83,6 +91,11 @@ class Waste(models.Model):
     def __str__(self):
         return str(self.user)
 
+
+class WasteData(models.Model):
+    
+    category = models.CharField(max_length=255)
+    amount = models.FloatField()
 
 class Support(models.Model):
     name = models.ForeignKey(User, on_delete=models.CASCADE)

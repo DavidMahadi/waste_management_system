@@ -123,11 +123,24 @@ class ResetPasswordSerializer(serializers.Serializer):
 
 
 
+# class Client_ViewSerializer(serializers.ModelSerializer):
+
+#     class Meta:
+#         model = Client_View
+#         fields = ['id', 'user', 'waste_type', 'waste_quantity', 'amount', 'created_at', 'updated_at']
+
+
+
 class Client_ViewSerializer(serializers.ModelSerializer):
+    cost_to_pay = serializers.SerializerMethodField()
+
+    def get_cost_to_pay(self, obj):
+        return obj.calculate_price()
 
     class Meta:
-        model = Client_View
-        fields = ['id', 'user', 'waste_type', 'waste_quantity', 'amount', 'created_at', 'updated_at']
+        model = ClientView
+        fields = ['id', 'user', 'waste_type', 'waste_quantity', 'cost_to_pay', 'created_at', 'updated_at']
+
 
 
 class WasteSerializer(serializers.ModelSerializer):
@@ -141,3 +154,6 @@ class SupportSerializer(serializers.ModelSerializer):
     class Meta:
         model = Support
         fields = ['id', 'name', 'email', 'phone_number', 'message']
+
+
+

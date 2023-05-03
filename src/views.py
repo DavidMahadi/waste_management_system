@@ -131,18 +131,30 @@ def login(request):
         }
     )
 
-# @swagger_auto_schema(methods=['post'], request_body=AuthTokenSerializer)
-@api_view(['GET'])
+
+
+@swagger_auto_schema(methods=['post'], request_body=AuthTokenSerializer)
+@api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticated])
-def customer_view(request):
+def Client_View(request):
     user = request.user
     if user.is_staff:
         return Response({"message": "Get Authenticated First"})
     elif user.user_type != 'customer':
         return Response({"message": "Access Forbidden"})
+    
+    if request.method == 'POST':
+        serializer = Client_ViewSerializer(data=request.data)
+        if serializer.is_valid():
+            client_view = serializer.save()
+            client_view.cost_to_pay = client_view.calculate_price()
+            client_view.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     else:
-        # Your view code here
-        return Response({'message': 'Hello, Client View!'})
+        client_views = ClientView.objects.all()
+        serializer = Client_ViewSerializer(client_views, many=True)
+        return Response(serializer.data)
 
 
 # @swagger_auto_schema(methods=['post'], request_body=AuthTokenSerializer)
