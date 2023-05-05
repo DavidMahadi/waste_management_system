@@ -19,8 +19,6 @@ class User(AbstractUser):
     )
     user_type = models.CharField(max_length=200, choices=USER_TYPE_CHOICES, default="customer")
     phone_number = models.CharField(max_length=200, null=True, blank=True)
-    second_number = models.CharField(max_length=200, null=True, blank=True)
-    national_id = models.CharField(max_length=200, null=True, blank=True)
     province = models.CharField(max_length=200, null=True, blank=True)
     district = models.CharField(max_length=200, null=True, blank=True)
     sector = models.CharField(max_length=200, null=True, blank=True)

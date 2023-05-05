@@ -33,8 +33,6 @@ class RegisterUserSerializer(serializers.ModelSerializer):
             "password2",
             "user_type",
             "phone_number",
-            "second_number",
-            "national_id",
             "province",
             "district",
             "sector",
@@ -58,8 +56,6 @@ class RegisterUserSerializer(serializers.ModelSerializer):
             },
             "user_type": {"required": True},
             "phone_number":{"required": True},
-            "second_number":{"required": True},
-            "national_id": {"required": True},
             "province": {"required": True},
             "district": {"required": True},
             "sector": {"required": True},
@@ -117,17 +113,6 @@ class ResetPasswordSerializer(serializers.Serializer):
         model = User
         fields = ('old_password', 'password1', 'password2')
 
-
-
-
-
-
-
-# class Client_ViewSerializer(serializers.ModelSerializer):
-
-#     class Meta:
-#         model = Client_View
-#         fields = ['id', 'user', 'waste_type', 'waste_quantity', 'amount', 'created_at', 'updated_at']
 
 
 
