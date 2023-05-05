@@ -35,6 +35,9 @@ urlpatterns = [
     path('logoutall', knox_views.LogoutAllView.as_view(), name='logoutall'),
     path('generate_otp', generate_otp, name='generate_otp'),
     path('verify_email_otp/<str:email>/', verify_email_otp, name='verify_email_otp'),
+    path('userupdate', userupdate, name='userupdate'),
+    path('userlocationupdate', userlocationupdate, name='userlocationupdate'),
+    path('userdelete', userdelete, name='userdelete'),
 
 
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),

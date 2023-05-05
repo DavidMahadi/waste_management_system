@@ -8,7 +8,7 @@ from rest_framework import status
 from knox.auth import AuthToken
 from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.serializers import AuthTokenSerializer
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.models import User
 from src.utils import *
@@ -212,6 +212,37 @@ def reset_password(request):
     return Response({'detail': 'Password reset successful.', 'token': new_auth_token.token}, status=status.HTTP_200_OK)
 
 
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def userupdate(request):
+    user = get_object_or_404(User, pk=request.user.pk)
+    serializer = UpdateUserSerializer(user, data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def userlocationupdate(request):
+    user = get_object_or_404(User, pk=request.user.pk)
+    serializer = UpdateUserLocationSerializer(user, data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def userdelete(request):
+    user = get_object_or_404(User, pk=request.user.pk)
+    user.delete()
+    return Response({'message': 'User deleted successfully'})
+
+    
 # @swagger_auto_schema(methods=['post'], request_body=AuthTokenSerializer)
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])

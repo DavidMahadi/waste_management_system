@@ -39,7 +39,6 @@ class RegisterUserSerializer(serializers.ModelSerializer):
             "cell",
             "property_number",
             "gender",
-            "age",
             
         )
         extra_kwargs = {
@@ -62,7 +61,6 @@ class RegisterUserSerializer(serializers.ModelSerializer):
             "cell": {"required": True},
             "property_number": {"required": True},
             "gender": {"required": True},
-            "age": {"required": True},
             
             
         }
@@ -114,6 +112,64 @@ class ResetPasswordSerializer(serializers.Serializer):
         fields = ('old_password', 'password1', 'password2')
 
 
+
+class UpdateUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UpdateProfile
+        fields = (
+            "first_name",
+            "last_name",
+            "email",
+            "phone_number",
+         
+            
+        )
+        extra_kwargs = {
+            "first_name": {"required": True},
+            "last_name": {"required": True},
+            "email": {"required": True},
+            "phone_number":{"required": True},
+            
+            
+        }
+
+    def validate(self, data):
+        email = data.get("email")
+        if email and email != self.instance.email:
+            # If the email address is being changed, update the username field as well
+            username = email
+            data["username"] = username
+        return data
+
+
+class UpdateUserLocationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UpdateLocationProfile
+        fields = (
+            "property_number",
+            "province",
+            "district",
+            "sector",
+            "cell",
+         
+            
+        )
+        extra_kwargs = {
+           "property_number":{"required": True},
+            "province": {"required": True},
+            "district": {"required": True},
+            "sector": {"required": True},
+            "cell": {"required": True},
+
+            }
+
+    def validate(self, data):
+        email = data.get("email")
+        if email and email != self.instance.email:
+            # If the email address is being changed, update the username field as well
+            username = email
+            data["username"] = username
+        return data
 
 
 class Client_ViewSerializer(serializers.ModelSerializer):

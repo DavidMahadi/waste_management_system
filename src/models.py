@@ -72,6 +72,30 @@ class ClientView(models.Model):
         super().save(*args, **kwargs)
 
 
+class UpdateProfile(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    first_name = models.CharField(max_length=200, null=True, blank=True)
+    last_name = models.CharField(max_length=200, null=True, blank=True)
+    email = models.EmailField(max_length=200, null=True, blank=True)
+    phone_number = models.CharField(max_length=200, null=True, blank=True)
+
+
+    def __str__(self):
+        return self.first_name
+
+
+class UpdateLocationProfile(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    province = models.CharField(max_length=200, null=True, blank=True)
+    district = models.CharField(max_length=200, null=True, blank=True)
+    sector = models.CharField(max_length=200, null=True, blank=True)
+    cell = models.CharField(max_length=200, null=True, blank=True)
+    property_number = models.CharField(max_length=200, null=True, blank=True)
+
+    def __str__(self):
+        return self.first_name
+
+
 class Waste(models.Model):
     WASTE_TYPE_CHOICES = (
         ("Organic waste",'Organic waste'),
