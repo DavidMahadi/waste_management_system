@@ -238,6 +238,15 @@ def userlocationupdate(request):
 @swagger_auto_schema(
     method='delete',
     tags=['Registraion abd Other customer Actions'],
+    manual_parameters=[
+        openapi.Parameter(
+            'Authorization',
+            in_=openapi.IN_HEADER,
+            type=openapi.TYPE_STRING,
+            required=True,
+            description='Token in the format "Token <token>"'
+        ),
+    ],
     operation_summary='Delete user',
     responses={
         204: 'User deleted successfully',
