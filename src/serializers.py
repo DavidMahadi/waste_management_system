@@ -17,20 +17,23 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 
-class RegisterUserSerializer(serializers.ModelSerializer):
-    password1 = serializers.CharField(
-        write_only=True, required=True, validators=[validate_password]
-    )
-    password2 = serializers.CharField(write_only=True, required=True)
+from django.contrib.auth import get_user_model
+from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
+from django.utils.translation import gettext_lazy as _
 
+User = get_user_model()
+
+class RegisterUserSerializer(serializers.ModelSerializer):
+    full_name = serializers.CharField(required=True)
+    password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
+    
     class Meta:
         model = User
         fields = (
-            "first_name",
-            "last_name",
+            "full_name",
             "email",
-            "password1",
-            "password2",
+            "password",
             "user_type",
             "phone_number",
             "province",
@@ -38,55 +41,61 @@ class RegisterUserSerializer(serializers.ModelSerializer):
             "sector",
             "cell",
             "property_number",
-            "gender",
-            
         )
         extra_kwargs = {
-            "first_name": {"required": True},
-            "last_name": {"required": True},
+            "full_name": {"required": True,"allow_blank": True,},
             "email": {
                 "required": True,
                 "allow_blank": False,
-                "validators": [
-                    validators.UniqueValidator(
-                        User.objects.all(), "User with this email already exists"
-                    )
-                ],
             },
             "user_type": {"required": True},
-            "phone_number":{"required": True},
+            "phone_number": {"required": True},
             "province": {"required": True},
             "district": {"required": True},
             "sector": {"required": True},
             "cell": {"required": True},
             "property_number": {"required": True},
-            "gender": {"required": True},
-            
-            
         }
 
-    def validate(self, attrs):
-        if attrs["password1"] != attrs["password2"]:
-            raise serializers.ValidationError(
-                {"password": "Password Fields didn't match"}
-            )
+        def validate(self, attrs):
+            full_name = attrs["full_name"]
+            first_name, _, last_name = full_name.partition(" ")
+            if not last_name:
+                raise serializers.ValidationError({"full_name": "Last name is required."})
+            attrs["first_name"] = first_name
+            attrs["last_name"] = last_name
 
-        return attrs
+            password = attrs.get('password')
+            if not password:
+                raise serializers.ValidationError({"password": "Password is required."})
+            attrs.pop('password')
+
+            user = User(**attrs)
+            user.set_password(password)
+
+            attrs['password1'] = password
+            attrs['password2'] = password
+
+            return attrs
+        
+        def create(self, validated_data):
+            email = validated_data.get('email')
+            username = email
+            validated_data['username'] = username
+            user = super().create(validated_data)
+            return user
+
 
     def create(self, validated_data):
-        first_name = validated_data.get("first_name")
-        last_name = validated_data.get("last_name")
-        email = validated_data.get("email")
-        user_type = validated_data.get("user_type")
-
-        user = User.objects.create(
-            username=email, first_name=first_name, last_name=last_name, email=email, user_type=user_type
-        )
-
-        user.set_password(validated_data["password1"])
-        user.save()
-
+        email = validated_data.get('email', None)
+        username = email
+        if email and User.objects.filter(email=email).exists():
+            raise ValidationError(_('Email addresses must be unique.'))
+        user = User.objects.create_user(username=username, **validated_data)
         return user
+
+
+
 
 class ResetPasswordSerializer(serializers.Serializer):
     old_password = serializers.CharField(required=True)
@@ -198,3 +207,28 @@ class SupportSerializer(serializers.ModelSerializer):
 
 
 
+class CustomerReportSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomerReport
+        fields = ('id', 'start_date', 'end_date', 'total_users', 'userDetails')
+
+
+class InvoiceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Invoice
+        fields = ['user', 'month', 'payment_mode', 'status']
+
+
+
+
+class PaymentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Payment
+        fields = ('id', 'invoice', 'amount', 'payment_date', 'status')
+        read_only_fields = ('id', 'payment_date', 'status')
+
+
+class OTPSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OTP
+        fields = '__all__'

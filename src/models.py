@@ -1,12 +1,16 @@
 from django.db import models
 from django.utils import timezone
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser,PermissionsMixin
+from django.utils.translation import gettext as _
 from django.conf import settings
 
 # Create your models here.
 
 
-class User(AbstractUser):
+class User(AbstractUser, PermissionsMixin):
+    # remove the username field
+    email = models.EmailField(_('email address'), unique=True)
+    
     USER_TYPE_CHOICES = (
         ("customer", "customer"),
         ("employee", "employee"),
@@ -17,20 +21,26 @@ class User(AbstractUser):
         ("female",'female'),
         ("others",'others'),
     )
+    full_name = models.CharField(max_length=255, blank=True)
     user_type = models.CharField(max_length=200, choices=USER_TYPE_CHOICES, default="customer")
-    phone_number = models.CharField(max_length=200, null=True, blank=True)
-    province = models.CharField(max_length=200, null=True, blank=True)
-    district = models.CharField(max_length=200, null=True, blank=True)
-    sector = models.CharField(max_length=200, null=True, blank=True)
-    cell = models.CharField(max_length=200, null=True, blank=True)
-    property_number = models.CharField(max_length=200, null=True, blank=True)
-    gender = models.CharField(max_length=200, choices=USER_GENDER, default='male')
-    age = models.IntegerField(null=True)
+    phone_number = models.CharField(max_length=200, null=True, blank=False)
+    province = models.CharField(max_length=200, null=True, blank=False)
+    district = models.CharField(max_length=200, null=True, blank=False)
+    sector = models.CharField(max_length=200, null=True, blank=False)
+    cell = models.CharField(max_length=200, null=True, blank=False)
+    property_number = models.CharField(max_length=200, null=True, blank=False)
     is_verified=models.BooleanField(default=False)
     email_otp=models.CharField(max_length=500, blank=True)
 
+    def save(self, *args, **kwargs):
+        if not self.full_name.strip() and self.first_name.strip() and self.last_name.strip():
+            self.full_name = f"{self.first_name} {self.last_name}".strip()
+
+        super().save(*args, **kwargs)
+
     def __str__(self):
-        return self.first_name +'  '+  self.user_type
+        return self.full_name +' ' + self.user_type
+
 
 
 
@@ -70,6 +80,9 @@ class ClientView(models.Model):
             # Calculate the cost_to_pay if it hasn't been set yet
             self.cost_to_pay = self.calculate_price()
         super().save(*args, **kwargs)
+
+
+
 
 
 class UpdateProfile(models.Model):
@@ -135,4 +148,38 @@ class History(models.Model):
     timestamp = models.DateTimeField(auto_now_add=True)
 
 
- 
+
+
+class CustomerReport(models.Model):
+    start_date = models.DateTimeField(auto_now_add=True)
+    end_date = models.DateTimeField(null=True)
+    total_users = models.IntegerField()
+    userDetails = models.JSONField()
+
+
+
+
+class Invoice(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    month = models.TextField()
+    payment_mode = models.DecimalField(max_digits=8, decimal_places=2)
+    currentpayment = models.CharField(max_length=40)
+    created_at = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(max_length=20, default='pending')
+
+
+
+class Payment(models.Model):
+    invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE)
+    amount = models.DecimalField(max_digits=8, decimal_places=2)
+    payment_date = models.DateTimeField(default=timezone.now)
+    status = models.CharField(max_length=20, default='pending')
+    
+
+class OTP(models.Model):
+    payment = models.ForeignKey(Payment, on_delete=models.CASCADE)
+    code = models.CharField(max_length=6)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def is_valid(self):
+        return (timezone.now() - self.created_at).seconds < 600  # OTP valid for 10 minutes

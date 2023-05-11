@@ -25,8 +25,7 @@ schema_view = get_schema_view(
 # Project Urls
 
 urlpatterns = [
-    path('register_employee', Employee_register, name='register_employee'),
-    path('register_customer', Customer_register, name='register_customer'),
+    path('Registration', Register, name='Registration'),
     path('login', login, name='login'),
     path('customer', Client_View, name='customer-view'),
     path('employee', employee_view, name='employee-view'),
@@ -34,10 +33,27 @@ urlpatterns = [
     path('logout', knox_views.LogoutView.as_view(), name='logout'),
     path('logoutall', knox_views.LogoutAllView.as_view(), name='logoutall'),
     path('generate_otp', generate_otp, name='generate_otp'),
-    path('verify_email_otp/<str:email>/', verify_email_otp, name='verify_email_otp'),
+    path('verify_email_otp/<str:email>', verify_email_otp, name='verify_email_otp'),
     path('userupdate', userupdate, name='userupdate'),
     path('userlocationupdate', userlocationupdate, name='userlocationupdate'),
     path('userdelete', userdelete, name='userdelete'),
+    path('invoiceview', invoice_view, name='invoiceview'),
+    path('payment', payment_view, name='payment'),
+    path('otp-verify', otp_verify_view, name='otp_verify'),
+
+# employee dashboard
+
+
+    path('employeedashboard', employee_dashboard, name='employeedashboard'),
+    path('createclientview', create_client_view, name='createclientview'),
+    path('getclient_view', get_client_view, name='getclient_view'),
+    path('updateclientview', update_client_view, name='updateclientview'),
+    path('deleteclientview', delete_client_view, name='deleteclientview'),
+    path('generatereport', generate_report, name='generatereport'),
+
+    
+
+
 
 
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),

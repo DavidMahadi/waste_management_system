@@ -5,7 +5,7 @@ from django.core.mail import send_mail
 
 def generate_otp():
     # Generate a list of 6 random digits
-    digits = [random.randint(0, 9) for _ in range(6)]
+    digits = [random.randint(0, 9) for _ in range(5)]
     
     # Convert the digits to a string and return
     return ''.join(map(str, digits))
