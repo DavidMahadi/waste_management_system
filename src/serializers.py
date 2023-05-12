@@ -232,3 +232,18 @@ class OTPSerializer(serializers.ModelSerializer):
     class Meta:
         model = OTP
         fields = '__all__'
+
+
+
+
+
+class RequestPickUpSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PickUpRequest
+        fields = ('id','email','timestamp', 'text', )
+
+
+class AllRequestPickUpSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PickUpRequest
+        fields = '__all__'

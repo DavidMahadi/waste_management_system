@@ -22,3 +22,5 @@ def send_otp_email(email,otp):
         print(e)
         return False
     return True
+
+

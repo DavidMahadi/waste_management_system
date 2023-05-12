@@ -183,3 +183,18 @@ class OTP(models.Model):
 
     def is_valid(self):
         return (timezone.now() - self.created_at).seconds < 600  # OTP valid for 10 minutes
+
+
+
+
+
+class PickUpRequest(models.Model):
+    sender = models.ForeignKey(User, related_name='sent_messages', on_delete=models.CASCADE)
+    email = models.CharField(max_length=255)
+    text = models.TextField()
+    to_all_employees = models.BooleanField(default=False)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f'{self.sender.username} ({self.email}) sent a message at {self.timestamp}'
+

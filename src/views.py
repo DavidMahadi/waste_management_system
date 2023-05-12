@@ -13,6 +13,7 @@ from django.contrib import messages
 from django.contrib.auth.models import User
 from src.utils import *
 from src.models import User
+from src.models import PickUpRequest
 from datetime import datetime,timedelta
 from django.contrib.auth import get_user_model
 from drf_yasg.utils import swagger_auto_schema
@@ -140,22 +141,6 @@ def Client_View(request):
 
 
 # @swagger_auto_schema(methods=['get'], request_body=AuthTokenSerializer)
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def employee_view(request):
-    user = request.user
-    if user.is_staff== True:
-        return Response({"message": "Get Authenticated First"})
-    elif user.user_type != 'employee':
-        return Response({"message": "Access Forbidden"})
-    else:
-        # Your view code here
-        return Response({'message': 'Hello, Employee View!'})
-
-
-
-
-
 
 @swagger_auto_schema(methods=['post'], tags=['Registraion abd Other customer Actions'], request_body=ResetPasswordSerializer)
 @api_view(['POST'])
@@ -263,36 +248,6 @@ def userdelete(request):
     return Response(status=status.HTTP_204_NO_CONTENT)
 
     
-# @swagger_auto_schema(methods=['get'], request_body="")
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def order_history(request):
-    user = request.user
-    orders = Order.objects.filter(user=user)
-    serializer = OrderSerializer(orders, many=True)
-    return Response(serializer.data)
-
-
-
-
-
-
-# Employee dashboard view to get all client views
-
-# @swagger_auto_schema(methods=['get'],)
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def employee_dashboard(request):
-    user = request.user
-    if user.is_staff== True:
-        return Response({"message": "Get Authenticated First"})
-    elif user.user_type != 'employee':
-        return Response({"message": "Access Forbidden"})
-    else:
-        client_views = ClientView.objects.all()
-        serializer = Client_ViewSerializer(client_views, many=True)
-        return Response(serializer.data)
-
 
 # Employee dashboard view to create a new client view
 # @swagger_auto_schema(methods=['post'], request_body=Client_ViewSerializer)
@@ -317,7 +272,8 @@ def create_client_view(request):
 
 # Employee dashboard view to get a specific client view by id
 @swagger_auto_schema(
-    method='get', 
+    method='get',
+    tags=['Employee Actions'],
     operation_summary='Get client view by ID', 
     responses={
         200: Client_ViewSerializer(),
@@ -429,6 +385,7 @@ def delete_client_view(request, id):
 
 @swagger_auto_schema(
     method='get',
+    tags=['Employee Actions'],
     operation_summary='Generate report for all customers',
     manual_parameters=[
         openapi.Parameter(
@@ -588,3 +545,92 @@ def otp_verify_view(request):
         else:
             return Response({'error': 'Invalid OTP code.'}, status=status.HTTP_400_BAD_REQUEST)
     return Response(otp_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
+@swagger_auto_schema(
+    methods=['post'],
+    tags=['Registraion abd Other customer Actions'],
+    request_body=PaymentSerializer,
+    manual_parameters=[
+        openapi.Parameter(
+            'Authorization',
+            in_=openapi.IN_HEADER,
+            type=openapi.TYPE_STRING,
+            required=True,
+            description='Token in the format "Token <token>"'
+        ),
+    ]
+)
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def RequestPickUp(request):
+    """
+    API view to allow a client to send a message to all employees in the company.
+    """
+    user = request.user
+    if not user.is_authenticated:
+        return Response({'error': 'User must be logged in.'}, status=status.HTTP_401_UNAUTHORIZED)
+    if user.user_type != 'customer':
+        return Response({'error': 'Access forbidden.'}, status=status.HTTP_403_FORBIDDEN)
+    text = request.data.get('text')
+    if not text:
+        return Response({'error': 'Message text is required.'}, status=status.HTTP_400_BAD_REQUEST)
+    email = user.email
+    employees = User.objects.filter(is_staff=True)
+    messages = []
+    for employee in employees:
+        message = PickUpRequest.objects.create(sender=user, email=email, text=text, to_all_employees=True)
+        messages.append(message)
+    serializer = RequestPickUpSerializer(messages, many=True)
+    return Response(serializer.data)
+
+@swagger_auto_schema(method='get', operation_description='Get a list of users')
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def all_my_request(request):
+    user = request.user
+    messages = PickUpRequest.objects.filter(sender=user)
+    serializer = AllRequestPickUpSerializer(messages, many=True)
+    return Response(serializer.data)
+
+@swagger_auto_schema(
+    methods=['post'],
+    tags=['Employee Actions'],
+    request_body=PaymentSerializer,
+    manual_parameters=[
+        openapi.Parameter(
+            'Authorization',
+            in_=openapi.IN_HEADER,
+            type=openapi.TYPE_STRING,
+            required=True,
+            description='Token in the format "Token <token>"'
+        ),
+    ]
+)
+@api_view(['GET', 'POST'])
+@permission_classes([IsAuthenticated])
+def PickupRequestReceiving(request):
+    """
+    API view to list all pickup requests and allow employees to respond to them.
+    """
+    user = request.user
+    if not user.is_authenticated:
+        return Response({'error': 'User must be logged in.'}, status=status.HTTP_401_UNAUTHORIZED)
+    if user.is_staff:
+        return Response({'error': 'Access forbidden.'}, status=status.HTTP_403_FORBIDDEN)
+
+    if request.method == 'GET':
+        # Retrieve all pickup requests
+        pickup_requests = PickUpRequest.objects.order_by('-timestamp')
+        serializer = RequestPickUpSerializer(pickup_requests, many=True)
+        return Response(serializer.data)
+    
+    elif request.method == 'POST':
+        # Create a new pickup request
+        serializer = RequestPickUpSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
