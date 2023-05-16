@@ -2,6 +2,7 @@ from django.db import models
 from django.utils import timezone
 from django.contrib.auth.models import AbstractUser,PermissionsMixin
 from django.utils.translation import gettext as _
+from django.contrib.auth import get_user_model
 from django.conf import settings
 
 # Create your models here.
@@ -168,13 +169,29 @@ class Invoice(models.Model):
     status = models.CharField(max_length=20, default='pending')
 
 
+    
 
 class Payment(models.Model):
-    invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE)
-    amount = models.DecimalField(max_digits=8, decimal_places=2)
+    user = models.ForeignKey(User, on_delete=models.CASCADE,default=1)
+    month = models.DateField(default=timezone.now)
+    amount_to_pay = models.DecimalField(max_digits=8, decimal_places=2)
     payment_date = models.DateTimeField(default=timezone.now)
-    status = models.CharField(max_length=20, default='pending')
-    
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.full_name = f"{self.user.first_name} {self.user.last_name}"
+
+
+class PaymentInfo(models.Model):
+    payment = models.ForeignKey(Payment, on_delete=models.CASCADE)
+    payment_mode = models.CharField(max_length=50)
+    payment_number = models.CharField(max_length=50)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+
+
+
+
 
 class OTP(models.Model):
     payment = models.ForeignKey(Payment, on_delete=models.CASCADE)

@@ -14,24 +14,33 @@ from django.contrib.auth.models import User
 from src.utils import *
 from src.models import User
 from src.models import PickUpRequest
-from datetime import datetime,timedelta
+from datetime import datetime,timedelta,date
+from django.utils import timezone
 from django.contrib.auth import get_user_model
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
+import stripe
+from django.contrib.auth import get_user_model
+
 
 
 EMPLOYEE = 'Employee'
 CUSTOMER = 'Customer'
 
-@swagger_auto_schema(methods=['post'], tags=['Registraion abd Other customer Actions'],request_body=RegisterUserSerializer)
+@swagger_auto_schema(methods=['post'], tags=['Customer Actions'], request_body=RegisterUserSerializer)
 @api_view(["POST"])
 def Register(request):
     data = request.data.copy()
     password = data.pop("password1", None)
     if password:
         data["password"] = password
+    
+    # Set the 'user_type' field to 'employee' in the data dictionary
+    data["user_type"] = "customer"
+
     serializer = RegisterUserSerializer(data=data)
     serializer.is_valid(raise_exception=True)
+
     user = serializer.save()
 
     otp = generate_otp()
@@ -48,9 +57,10 @@ def Register(request):
     return Response(response_data)
 
 
+
 @swagger_auto_schema(
     method='post',
-    tags=['Registraion abd Other customer Actions'],
+    tags=['Customer Actions'],
     request_body=openapi.Schema(
         type=openapi.TYPE_OBJECT,
         properties={
@@ -91,7 +101,7 @@ def verify_email_otp(request, email):
     return Response(response_data, status=status.HTTP_200_OK)
 
 
-@swagger_auto_schema(methods=['post'], tags=['Registraion abd Other customer Actions'], request_body=AuthTokenSerializer)
+@swagger_auto_schema(methods=['post'], tags=['Customer Actions'], request_body=AuthTokenSerializer)
 @api_view(["POST"])
 def login(request):
     serializer = AuthTokenSerializer(data=request.data)
@@ -114,35 +124,7 @@ def login(request):
         }
     )
 
-
-
-# @swagger_auto_schema(methods=['post', 'get'], request_body=Client_ViewSerializer)
-@api_view(['GET', 'POST'])
-@permission_classes([IsAuthenticated])
-def Client_View(request):
-    user = request.user
-    if user.is_staff:
-        return Response({"message": "Get Authenticated First"})
-    elif user.user_type != 'customer':
-        return Response({"message": "Access Forbidden"})
-    
-    if request.method == 'POST':
-        serializer = Client_ViewSerializer(data=request.data)
-        if serializer.is_valid():
-            client_view = serializer.save()
-            client_view.cost_to_pay = client_view.calculate_price()
-            client_view.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    else:
-        client_views = ClientView.objects.all()
-        serializer = Client_ViewSerializer(client_views, many=True)
-        return Response(serializer.data)
-
-
-# @swagger_auto_schema(methods=['get'], request_body=AuthTokenSerializer)
-
-@swagger_auto_schema(methods=['post'], tags=['Registraion abd Other customer Actions'], request_body=ResetPasswordSerializer)
+@swagger_auto_schema(methods=['post'], tags=['Customer Actions'], request_body=ResetPasswordSerializer)
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def reset_password(request):
@@ -194,7 +176,7 @@ def reset_password(request):
             description='Token in the format "Token <token>"'
         ),
     ],
-    tags=['Registraion abd Other customer Actions'],
+    tags=['Customer Actions'],
     request_body=UpdateUserSerializer)
 @api_view(['PUT'])
 @permission_classes([IsAuthenticated])
@@ -208,7 +190,7 @@ def userupdate(request):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-@swagger_auto_schema(methods=['put'], tags=['Registraion abd Other customer Actions'], request_body=UpdateUserLocationSerializer)
+@swagger_auto_schema(methods=['put'], tags=['Customer Actions'], request_body=UpdateUserLocationSerializer)
 @api_view(['PUT'])
 @permission_classes([IsAuthenticated])
 def userlocationupdate(request):
@@ -222,7 +204,7 @@ def userlocationupdate(request):
 
 @swagger_auto_schema(
     method='delete',
-    tags=['Registraion abd Other customer Actions'],
+    tags=['Customer Actions'],
     manual_parameters=[
         openapi.Parameter(
             'Authorization',
@@ -250,7 +232,15 @@ def userdelete(request):
     
 
 # Employee dashboard view to create a new client view
-# @swagger_auto_schema(methods=['post'], request_body=Client_ViewSerializer)
+@swagger_auto_schema(
+    method='post',
+    tags=['Employee Actions'],
+    operation_summary='Get client view by ID', 
+    responses={
+        200: Client_ViewSerializer(),
+        404: 'Client view not found'
+    }
+)
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def create_client_view(request):
@@ -340,7 +330,7 @@ def update_client_view(request, id):
 
 @swagger_auto_schema(
     method='delete',
-    tags=['client-views'],
+    tags=['Employee Actions'],
     operation_summary='Delete client view',
     manual_parameters=[
         openapi.Parameter(
@@ -458,7 +448,8 @@ def generate_report(request):
 
 
 @swagger_auto_schema(
-    method='post',tags=['Registraion abd Other customer Actions'],
+    method='post',
+    tags=['Customer Actions'],
     manual_parameters=[
         openapi.Parameter('user', openapi.IN_QUERY, description="User's email", type=openapi.TYPE_STRING),
         openapi.Parameter('month', openapi.IN_QUERY, description='Invoice month', type=openapi.TYPE_STRING),
@@ -491,6 +482,8 @@ def invoice_view(request):
 
 @swagger_auto_schema(
     methods=['post'],
+    tags=['Customer Actions'],
+    operation_summary='payment ways',
     request_body=PaymentSerializer,
     manual_parameters=[
         openapi.Parameter(
@@ -504,22 +497,61 @@ def invoice_view(request):
 )
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def payment_view(request):
-    invoice = get_object_or_404(Invoice, id=request.data['invoice_id'], customer__user=request.user)
-    if invoice.currentpayment == "PAID":
-        return Response({'error': 'Invoice already paid.'}, status=status.HTTP_400_BAD_REQUEST)
-    payment_serializer = PaymentSerializer(data=request.data)
-    if payment_serializer.is_valid():
-        payment = payment_serializer.save()
-        otp_code = get_random_string(length=6, allowed_chars='0123456789')
-        otp = OTP.objects.create(payment=payment, code=otp_code)
-        otp_serializer = OTPSerializer(otp)
-        return Response(otp_serializer.data, status=status.HTTP_201_CREATED)
-    return Response(payment_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+def create_payment(request):
+    user = request.user
+    month = timezone.now().date().replace(day=1) # set the day to 1st of current month
+    amount_to_pay = 2000 # default amount to pay per month
+    
+    payment = Payment(user=user, month=month, amount_to_pay=amount_to_pay)
+
+    serializer = PaymentSerializer(data=request.data)
+    if serializer.is_valid():
+        amount_to_pay = serializer.validated_data.get('amount_to_pay', amount_to_pay)
+        payment.amount_to_pay = amount_to_pay
+        payment.payment_date = timezone.now()
+        payment.save()
+
+        # Create a Stripe payment intent
+        intent = stripe.PaymentIntent.create(
+            amount=amount_to_pay * 100, # convert to cents
+            currency="usd",
+            payment_method_types=["card"],
+            metadata={
+                "payment_id": payment.id,
+            },
+        )
+
+        # Generate the payment link
+        payment_link = f"https://checkout.stripe.com/pay/{intent.client_secret}"
+
+        return Response({
+            'user': payment.user.full_name,
+            'month': payment.month,
+            'amount_to_pay': payment.amount_to_pay,
+            'payment_date': payment.payment_date,
+            'payment_link': payment_link,
+        }, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def submit_payment_info(request):
+    payment_id = request.data.get('payment_id')
+    payment_mode = request.data.get('payment_mode')
+    payment_number = request.data.get('payment_number')
+
+    payment = Payment.objects.get(id=payment_id)
+    payment_info = PaymentInfo(payment=payment, payment_mode=payment_mode, payment_number=payment_number)
+    payment_info.save()
+
+    return Response(status=status.HTTP_200_OK)
+
 
 
 @swagger_auto_schema(
     methods=['post'],
+    tags=['Customer Actions'],
+    operation_summary='Generate report for all customers',
     request_body=OTPSerializer,
     manual_parameters=[
         openapi.Parameter(
@@ -551,7 +583,7 @@ def otp_verify_view(request):
 
 @swagger_auto_schema(
     methods=['post'],
-    tags=['Registraion abd Other customer Actions'],
+    tags=['Customer Actions'],
     request_body=PaymentSerializer,
     manual_parameters=[
         openapi.Parameter(

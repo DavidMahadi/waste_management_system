@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 
 from pathlib import Path
 import os
+import stripe
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -154,6 +156,10 @@ REST_FRAMEWORK = {
 
 AUTH_USER_MODEL = 'src.User'
 
+
+STRIPE_TEST_SECRET_KEY = "sk_test_51N8IFbLBlepbgWdW2nWPdf6dRF5LEckyxIPgGGQiqFKKVyWdnrdajx2luRMvtl42xjilCNbyxadCiAup7gKhPlU300wZHCo2JF"
+
+stripe.api_key = STRIPE_TEST_SECRET_KEY
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'

@@ -25,9 +25,9 @@ from django.utils.translation import gettext_lazy as _
 User = get_user_model()
 
 class RegisterUserSerializer(serializers.ModelSerializer):
-    full_name = serializers.CharField(required=True)
+    full_name = serializers.CharField(required=True, min_length=3)
     password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
-    
+
     class Meta:
         model = User
         fields = (
@@ -43,55 +43,49 @@ class RegisterUserSerializer(serializers.ModelSerializer):
             "property_number",
         )
         extra_kwargs = {
-            "full_name": {"required": True,"allow_blank": True,},
-            "email": {
-                "required": True,
-                "allow_blank": False,
-            },
-            "user_type": {"required": True},
-            "phone_number": {"required": True},
-            "province": {"required": True},
-            "district": {"required": True},
-            "sector": {"required": True},
-            "cell": {"required": True},
-            "property_number": {"required": True},
+            "full_name": {"required": True},
+            "email": {"required": True, "allow_blank": False},
+            "user_type": {"required": False},  # Optional field
+            "phone_number": {"required": False},  # Optional field
+            "province": {"required": False},  # Optional field
+            "district": {"required": False},  # Optional field
+            "sector": {"required": False},  # Optional field
+            "cell": {"required": False},  # Optional field
+            "property_number": {"required": False},  # Optional field
         }
 
-        def validate(self, attrs):
-            full_name = attrs["full_name"]
-            first_name, _, last_name = full_name.partition(" ")
-            if not last_name:
-                raise serializers.ValidationError({"full_name": "Last name is required."})
-            attrs["first_name"] = first_name
-            attrs["last_name"] = last_name
+    def validate_full_name(self, value):
+        names = value.split()
+        if len(names) < 2:
+            raise serializers.ValidationError("Lastname is required")
+        return value
 
-            password = attrs.get('password')
-            if not password:
-                raise serializers.ValidationError({"password": "Password is required."})
-            attrs.pop('password')
+    def validate(self, attrs):
+        full_name = attrs["full_name"]
+        first_name, _, last_name = full_name.partition(" ")
+        if not last_name:
+            raise serializers.ValidationError({"full_name": "Last name is required."})
+        attrs["first_name"] = first_name
+        attrs["last_name"] = last_name
 
-            user = User(**attrs)
-            user.set_password(password)
+        password = attrs.get('password')
+        if not password:
+            raise serializers.ValidationError({"password": "Password is required."})
+        attrs.pop('password')
 
-            attrs['password1'] = password
-            attrs['password2'] = password
+        user = User(**attrs)
+        user.set_password(password)
 
-            return attrs
-        
-        def create(self, validated_data):
-            email = validated_data.get('email')
-            username = email
-            validated_data['username'] = username
-            user = super().create(validated_data)
-            return user
+        attrs['password1'] = password
+        attrs['password2'] = password
 
+        return attrs
 
     def create(self, validated_data):
-        email = validated_data.get('email', None)
+        email = validated_data.get('email')
         username = email
-        if email and User.objects.filter(email=email).exists():
-            raise ValidationError(_('Email addresses must be unique.'))
-        user = User.objects.create_user(username=username, **validated_data)
+        validated_data['username'] = username
+        user = super().create(validated_data)
         return user
 
 
@@ -220,12 +214,24 @@ class InvoiceSerializer(serializers.ModelSerializer):
 
 
 
-
 class PaymentSerializer(serializers.ModelSerializer):
+    full_name = serializers.ReadOnlyField(source='user.get_full_name')
+
     class Meta:
         model = Payment
-        fields = ('id', 'invoice', 'amount', 'payment_date', 'status')
-        read_only_fields = ('id', 'payment_date', 'status')
+        fields = ['id', 'full_name', 'month', 'amount_to_pay', 'payment_date']
+        read_only_fields = ['id', 'month', 'amount_to_pay', 'payment_date']
+
+    def create(self, validated_data):
+        user = self.context['request'].user
+        month = timezone.now().date().replace(day=1) # set the day to 1st of current month
+        amount_to_pay = validated_data.get('amount_to_pay', 2000) # default amount to pay per month
+        payment = Payment(user=user, month=month, amount_to_pay=amount_to_pay)
+        payment.save()
+        return payment
+
+
+
 
 
 class OTPSerializer(serializers.ModelSerializer):
