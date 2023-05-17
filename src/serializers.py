@@ -81,14 +81,13 @@ class RegisterUserSerializer(serializers.ModelSerializer):
 
         return attrs
 
-    def create(self, validated_data):
+def create(self, validated_data):
+        password = validated_data.pop('password')
         email = validated_data.get('email')
         username = email
         validated_data['username'] = username
-        user = super().create(validated_data)
+        user = User.objects.create_user(**validated_data, password=password)
         return user
-
-
 
 
 class ResetPasswordSerializer(serializers.Serializer):
