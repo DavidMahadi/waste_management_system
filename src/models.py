@@ -174,7 +174,7 @@ class Invoice(models.Model):
 class Payment(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE,default=1)
     month = models.DateField(default=timezone.now)
-    amount_to_pay = models.DecimalField(max_digits=8, decimal_places=2)
+    amount_to_pay = models.DecimalField(max_digits=8, decimal_places=2, default=2000)
     payment_date = models.DateTimeField(default=timezone.now)
     is_confirmed = models.BooleanField(default=False)
 

@@ -77,7 +77,13 @@ class RegisterUserSerializer(serializers.ModelSerializer):
         password = validated_data.pop('password')
         email = validated_data.pop('email')
         username = email
-        user = User.objects.create_user(username=username, email=email, password=password, **validated_data)
+        first_name = validated_data.pop('first_name')  # Retrieve the first_name from validated_data
+        last_name = validated_data.pop('last_name')  # Retrieve the last_name from validated_data
+
+        # Create the user with the retrieved values
+        user = User.objects.create_user(username=username, email=email, password=password,
+                                        first_name=first_name, last_name=last_name, **validated_data)
+        
         return user
 
 class ResetPasswordSerializer(serializers.Serializer):
@@ -106,31 +112,38 @@ class ResetPasswordSerializer(serializers.Serializer):
 
 
 class UpdateUserSerializer(serializers.ModelSerializer):
+    full_name = serializers.CharField(required=True, min_length=3)
+
     class Meta:
         model = UpdateProfile
         fields = (
-            "first_name",
-            "last_name",
+            "full_name",
             "email",
             "phone_number",
-         
-            
         )
         extra_kwargs = {
-            "first_name": {"required": True},
-            "last_name": {"required": True},
             "email": {"required": True},
-            "phone_number":{"required": True},
-            
-            
+            "phone_number": {"required": True},
         }
 
+    def validate_full_name(self, value):
+        names = value.split()
+        if len(names) < 2:
+            raise serializers.ValidationError("Full name should include at least first name and last name.")
+        return value
+
     def validate(self, data):
-        email = data.get("email")
-        if email and email != self.instance.email:
-            # If the email address is being changed, update the username field as well
-            username = email
-            data["username"] = username
+        full_name = data.get("full_name")
+        if full_name:
+            names = full_name.split()
+            if len(names) >= 2:
+                first_name = names[0]
+                last_name = ' '.join(names[1:])
+                data["first_name"] = first_name
+                data["last_name"] = last_name
+            else:
+                data["first_name"] = names[0]
+                data["last_name"] = ""
         return data
 
 
