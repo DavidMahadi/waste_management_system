@@ -27,27 +27,20 @@ from django.contrib.auth import get_user_model
 EMPLOYEE = 'Employee'
 CUSTOMER = 'Customer'
 
+User = get_user_model()
+
 @swagger_auto_schema(methods=['post'], tags=['Customer Actions'], request_body=RegisterUserSerializer)
 @api_view(["POST"])
 def Register(request):
-    data = request.data.copy()
-    password = data.pop("password1", None)
-    if password:
-        data["password"] = password
-    
-    # Set the 'user_type' field to 'employee' in the data dictionary
-    data["user_type"] = "customer"
-
-    serializer = RegisterUserSerializer(data=data)
+    serializer = RegisterUserSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
 
     user = serializer.save()
 
+    # Generate OTP, save it to the user, and send the email
     otp = generate_otp()
-
     user.email_otp = otp
     user.save()
-
     send_otp_email(user.email, otp)
 
     response_data = {
@@ -55,8 +48,6 @@ def Register(request):
     }
 
     return Response(response_data)
-
-
 
 @swagger_auto_schema(
     method='post',
@@ -124,8 +115,22 @@ def login(request):
         }
     )
 
-@swagger_auto_schema(methods=['post'], tags=['Customer Actions'], request_body=ResetPasswordSerializer)
-@api_view(['POST'])
+
+@swagger_auto_schema(
+    method='put',
+    manual_parameters=[
+        openapi.Parameter(
+            'Authorization',
+            in_=openapi.IN_HEADER,
+            type=openapi.TYPE_STRING,
+            required=True,
+            description='Token in the format "Token <token>"'
+        ),
+    ],
+    tags=['Customer Actions'],
+    request_body=ResetPasswordSerializer
+)
+@api_view(['PUT'])
 @permission_classes([IsAuthenticated])
 def reset_password(request):
     user = request.user
@@ -142,27 +147,6 @@ def reset_password(request):
     else:
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-
-    try:
-        auth_token = AuthToken.objects.get(user=user)
-    except AuthToken.DoesNotExist:
-        return Response(status=status.HTTP_401_UNAUTHORIZED)
-
-    new_password = request.data.get('new_password')
-    confirm_password = request.data.get('confirm_password')
-    if new_password != confirm_password:
-        return Response({'detail': 'New password and confirm password do not match.'}, status=status.HTTP_400_BAD_REQUEST)
-
-    user.set_password(new_password)
-    user.save()
-
-    # delete existing auth token
-    auth_token.delete()
-
-    # create new auth token
-    new_auth_token = AuthToken.objects.create(user=user)
-    
-    return Response({'detail': 'Password reset successful.', 'token': new_auth_token.token}, status=status.HTTP_200_OK)
 
 
 @swagger_auto_schema(
@@ -190,7 +174,20 @@ def userupdate(request):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-@swagger_auto_schema(methods=['put'], tags=['Customer Actions'], request_body=UpdateUserLocationSerializer)
+@swagger_auto_schema(
+    method='put',
+    manual_parameters=[
+        openapi.Parameter(
+            'Authorization',
+            in_=openapi.IN_HEADER,
+            type=openapi.TYPE_STRING,
+            required=True,
+            description='Token in the format "Token <token>"'
+        ),
+    ],
+    tags=['Customer Actions'],
+    request_body=UpdateUserLocationSerializer
+)
 @api_view(['PUT'])
 @permission_classes([IsAuthenticated])
 def userlocationupdate(request):
@@ -200,6 +197,7 @@ def userlocationupdate(request):
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 
 @swagger_auto_schema(
@@ -586,7 +584,6 @@ def otp_verify_view(request):
 
 
 
-
 @swagger_auto_schema(
     methods=['post'],
     tags=['Customer Actions'],
@@ -613,7 +610,7 @@ def RequestPickUp(request):
     if user.user_type != 'customer':
         return Response({'error': 'Access forbidden.'}, status=status.HTTP_403_FORBIDDEN)
     text = request.data.get('text')
-    if not text:
+    if not text or text.strip() == "":
         return Response({'error': 'Message text is required.'}, status=status.HTTP_400_BAD_REQUEST)
     email = user.email
     employees = User.objects.filter(is_staff=True)
@@ -623,6 +620,7 @@ def RequestPickUp(request):
         messages.append(message)
     serializer = RequestPickUpSerializer(messages, many=True)
     return Response(serializer.data)
+
 
 @swagger_auto_schema(method='get', operation_description='Get a list of users')
 @api_view(['GET'])

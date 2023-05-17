@@ -22,6 +22,9 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 
+from django.contrib.auth import get_user_model
+from rest_framework import serializers
+from django.contrib.auth.password_validation import validate_password
 User = get_user_model()
 
 class RegisterUserSerializer(serializers.ModelSerializer):
@@ -68,27 +71,14 @@ class RegisterUserSerializer(serializers.ModelSerializer):
         attrs["first_name"] = first_name
         attrs["last_name"] = last_name
 
-        password = attrs.get('password')
-        if not password:
-            raise serializers.ValidationError({"password": "Password is required."})
-        attrs.pop('password')
-
-        user = User(**attrs)
-        user.set_password(password)
-
-        attrs['password1'] = password
-        attrs['password2'] = password
-
         return attrs
 
-def create(self, validated_data):
+    def create(self, validated_data):
         password = validated_data.pop('password')
-        email = validated_data.get('email')
+        email = validated_data.pop('email')
         username = email
-        validated_data['username'] = username
-        user = User.objects.create_user(**validated_data, password=password)
+        user = User.objects.create_user(username=username, email=email, password=password, **validated_data)
         return user
-
 
 class ResetPasswordSerializer(serializers.Serializer):
     old_password = serializers.CharField(required=True)
