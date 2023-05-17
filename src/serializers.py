@@ -44,14 +44,14 @@ class RegisterUserSerializer(serializers.ModelSerializer):
         )
         extra_kwargs = {
             "full_name": {"required": True},
-            "email": {"required": True, "allow_blank": False},
+            "email": {"required": True, "allow_blank": True},
             "user_type": {"required": False},  # Optional field
-            "phone_number": {"required": False},  # Optional field
-            "province": {"required": False},  # Optional field
-            "district": {"required": False},  # Optional field
-            "sector": {"required": False},  # Optional field
-            "cell": {"required": False},  # Optional field
-            "property_number": {"required": False},  # Optional field
+            "phone_number": {"required": True},  # Optional field
+            "province": {"required": True},  # Optional field
+            "district": {"required": True},  # Optional field
+            "sector": {"required": True},  # Optional field
+            "cell": {"required": True},  # Optional field
+            "property_number": {"required": True},  # Optional field
         }
 
     def validate_full_name(self, value):

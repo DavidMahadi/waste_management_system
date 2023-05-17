@@ -520,33 +520,39 @@ def create_payment(request):
                 "payment_id": payment.id,
             },
         )
-
-        # Generate the payment link
-        payment_link = f"https://checkout.stripe.com/pay/{intent.client_secret}"
-
         return Response({
+            'id':payment.id,
             'user': payment.user.full_name,
             'month': payment.month,
             'amount_to_pay': payment.amount_to_pay,
             'payment_date': payment.payment_date,
-            'payment_link': payment_link,
         }, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def submit_payment_info(request):
-    payment_id = request.data.get('payment_id')
     payment_mode = request.data.get('payment_mode')
     payment_number = request.data.get('payment_number')
 
-    payment = Payment.objects.get(id=payment_id)
+    if not payment_mode:
+        return Response({"error": "Payment mode is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+    if not payment_number:
+        return Response({"error": "Payment number is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        payment = Payment.objects.filter(is_confirmed=False, user=request.user).latest('payment_date')
+    except Payment.DoesNotExist:
+        return Response({"error": "No pending payment found."}, status=status.HTTP_404_NOT_FOUND)
+
     payment_info = PaymentInfo(payment=payment, payment_mode=payment_mode, payment_number=payment_number)
     payment_info.save()
 
-    return Response(status=status.HTTP_200_OK)
+    payment.is_confirmed = True
+    payment.save()
 
-
+    return Response({"message": "Payment confirmed successfully."}, status=status.HTTP_200_OK)
 
 @swagger_auto_schema(
     methods=['post'],

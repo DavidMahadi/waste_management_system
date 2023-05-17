@@ -27,7 +27,6 @@ schema_view = get_schema_view(
 urlpatterns = [
     path('Registration', Register, name='Registration'),
     path('login', login, name='login'),
-    # path('customer', Client_View, name='customer-view'),
     path('reset_password', reset_password, name='reset-password'),
     path('logout', knox_views.LogoutView.as_view(), name='logout'),
     path('logoutall', knox_views.LogoutAllView.as_view(), name='logoutall'),
@@ -38,6 +37,7 @@ urlpatterns = [
     path('userdelete', userdelete, name='userdelete'),
     path('invoiceview', invoice_view, name='invoiceview'),
     path('createpayment', create_payment, name='createpayment'),
+    path('submitpaymentinfo', submit_payment_info, name='submitpaymentinfo'),
     path('otp-verify', otp_verify_view, name='otp_verify'),
 
 # employee dashboard

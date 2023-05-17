@@ -176,10 +176,12 @@ class Payment(models.Model):
     month = models.DateField(default=timezone.now)
     amount_to_pay = models.DecimalField(max_digits=8, decimal_places=2)
     payment_date = models.DateTimeField(default=timezone.now)
+    is_confirmed = models.BooleanField(default=False)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.full_name = f"{self.user.first_name} {self.user.last_name}"
+
 
 
 class PaymentInfo(models.Model):
