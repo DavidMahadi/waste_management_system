@@ -221,7 +221,7 @@ class PaymentSerializer(serializers.ModelSerializer):
 class ConfirmingSerializer(serializers.ModelSerializer):
     class Meta:
         model = ConfirmingPayment
-        fields = ['payment_mode', 'phone_number']
+        fields = ['amount','payment_mode', 'phone_number']
 
 
 class RequestPickUpSerializer(serializers.ModelSerializer):

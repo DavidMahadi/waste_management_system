@@ -172,12 +172,13 @@ class ConfirmingPayment(models.Model):
         ('momo', 'momo'),
         ('Airtel', 'Airtel'),
     )
-    amount = models.ForeignKey(CreatePayment,on_delete=models.CASCADE,default=1)
+    amount = '2000'
     payment_mode = models.CharField(max_length=8, choices=payment_modes)
     phone_number = models.CharField(max_length=15)
 
     def __str__(self):
         return f"Payment Mode: {self.payment_mode}, Phone Number: {self.phone_number}"
+
 
 
 

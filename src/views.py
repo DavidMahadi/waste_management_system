@@ -556,7 +556,6 @@ def confirming_create(request):
         return Response({
             "message": "Confirming created successfully.",
             "user": user.username,
-            "amount_to_pay": CreatePayment.amount_to_pay,
             "data": serializer.data
         })
     return Response(serializer.errors, status=400)
