@@ -218,6 +218,10 @@ class PaymentSerializer(serializers.ModelSerializer):
         payment.save()
         return payment
 
+class ConfirmingSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ConfirmingPayment
+        fields = ['payment_mode', 'phone_number']
 
 
 class RequestPickUpSerializer(serializers.ModelSerializer):

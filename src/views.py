@@ -527,6 +527,40 @@ def create_payment(request):
         }, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
+
+
+@swagger_auto_schema(
+    methods=['post'],
+    tags=['Customer Actions'],
+    request_body=PaymentSerializer,
+    manual_parameters=[
+        openapi.Parameter(
+            'Authorization',
+            in_=openapi.IN_HEADER,
+            type=openapi.TYPE_STRING,
+            required=True,
+            description='Token in the format "Token <token>"'
+        ),
+    ]
+)
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def confirming_create(request):
+    user = request.user
+    amount_to_pay = request.data.get('amount_to_pay')
+
+    serializer = ConfirmingSerializer(data=request.data)
+    if serializer.is_valid():
+        confirming = serializer.save()
+        return Response({
+            "message": "Confirming created successfully.",
+            "user": user.username,
+            "amount_to_pay": CreatePayment.amount_to_pay,
+            "data": serializer.data
+        })
+    return Response(serializer.errors, status=400)
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def submit_payment_info(request):

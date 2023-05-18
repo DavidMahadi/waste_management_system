@@ -148,7 +148,7 @@ class Invoice(models.Model):
     
 
 class CreatePayment(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE,default=1)
+    user = models.ForeignKey(User, on_delete=models.CASCADE,)
     month = models.DateField(default=timezone.now)
     amount_to_pay = models.DecimalField(max_digits=10, decimal_places=2, default=2000)
     payment_date = models.DateTimeField(default=timezone.now)
@@ -167,6 +167,17 @@ class PaymentInfo(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
 
+class ConfirmingPayment(models.Model):
+    payment_modes = (
+        ('momo', 'momo'),
+        ('Airtel', 'Airtel'),
+    )
+    amount = models.ForeignKey(CreatePayment,on_delete=models.CASCADE,default=1)
+    payment_mode = models.CharField(max_length=8, choices=payment_modes)
+    phone_number = models.CharField(max_length=15)
+
+    def __str__(self):
+        return f"Payment Mode: {self.payment_mode}, Phone Number: {self.phone_number}"
 
 
 

@@ -38,6 +38,7 @@ urlpatterns = [
     path('invoiceview', invoice_view, name='invoiceview'),
     path('createpayment', create_payment, name='createpayment'),
     path('submitpaymentinfo', submit_payment_info, name='submitpaymentinfo'),
+    path('confirmingcreatepayment', confirming_create, name='confirmingcreatepayment'),
 
 # employee dashboard
 
