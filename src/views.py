@@ -560,6 +560,8 @@ def confirming_create(request):
         })
     return Response(serializer.errors, status=400)
 
+    
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def submit_payment_info(request):

@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
+    "corsheaders",
     "django.contrib.staticfiles",
     "rest_framework",
     "django_otp.plugins.otp_email",
@@ -55,6 +56,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -154,3 +156,19 @@ EMAIL_HOST_USER = 'badmannkr@gmail.com'
 EMAIL_HOST_PASSWORD = 'nnphetkzcvojmkit'
 
 ACCOUNT_EMAIL_CONFIRMATION_EXPIRE_DAYS = 1
+
+CORS_ALLOWED_ORIGINS = [
+    'http://127.0.0.1:8000',
+    'https://davidrw.pythonanywhere.com',
+]
+
+CSRF_TRUSTED_ORIGINS = [
+    'https://davidrw.pythonanywhere.com',
+]
+
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_CREDENTIALS = True
+
+SECURE_SCHEMES = ['https', 'http']
+SECURE_SSL_REDIRECT = True
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
