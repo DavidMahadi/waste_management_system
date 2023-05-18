@@ -38,7 +38,6 @@ urlpatterns = [
     path('invoiceview', invoice_view, name='invoiceview'),
     path('createpayment', create_payment, name='createpayment'),
     path('submitpaymentinfo', submit_payment_info, name='submitpaymentinfo'),
-    path('otp-verify', otp_verify_view, name='otp_verify'),
 
 # employee dashboard
 

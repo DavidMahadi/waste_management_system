@@ -127,30 +127,6 @@ class Waste(models.Model):
     def __str__(self):
         return str(self.user)
 
-
-class WasteData(models.Model):
-    
-    category = models.CharField(max_length=255)
-    amount = models.FloatField()
-
-class Support(models.Model):
-    name = models.ForeignKey(User, on_delete=models.CASCADE)
-    email = models.EmailField()
-    phone_number = models.CharField(max_length=20)
-    message = models.TextField()
-
-    def __str__(self):
-        return str(self.name)
-
-
-class History(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    action = models.CharField(max_length=255)
-    timestamp = models.DateTimeField(auto_now_add=True)
-
-
-
-
 class CustomerReport(models.Model):
     start_date = models.DateTimeField(auto_now_add=True)
     end_date = models.DateTimeField(null=True)
@@ -171,10 +147,10 @@ class Invoice(models.Model):
 
     
 
-class Payment(models.Model):
+class CreatePayment(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE,default=1)
     month = models.DateField(default=timezone.now)
-    amount_to_pay = models.DecimalField(max_digits=8, decimal_places=2, default=2000)
+    amount_to_pay = models.DecimalField(max_digits=10, decimal_places=2, default=2000)
     payment_date = models.DateTimeField(default=timezone.now)
     is_confirmed = models.BooleanField(default=False)
 
@@ -185,23 +161,10 @@ class Payment(models.Model):
 
 
 class PaymentInfo(models.Model):
-    payment = models.ForeignKey(Payment, on_delete=models.CASCADE)
+    payment = models.ForeignKey(CreatePayment, on_delete=models.CASCADE)
     payment_mode = models.CharField(max_length=50)
     payment_number = models.CharField(max_length=50)
     created_at = models.DateTimeField(auto_now_add=True)
-
-
-
-
-
-
-class OTP(models.Model):
-    payment = models.ForeignKey(Payment, on_delete=models.CASCADE)
-    code = models.CharField(max_length=6)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    def is_valid(self):
-        return (timezone.now() - self.created_at).seconds < 600  # OTP valid for 10 minutes
 
 
 

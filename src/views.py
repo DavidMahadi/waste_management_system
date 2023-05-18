@@ -500,7 +500,7 @@ def create_payment(request):
     month = timezone.now().date().replace(day=1) # set the day to 1st of current month
     amount_to_pay = 2000 # default amount to pay per month
     
-    payment = Payment(user=user, month=month, amount_to_pay=amount_to_pay)
+    payment = CreatePayment(user=user, month=month, amount_to_pay=amount_to_pay)
 
     serializer = PaymentSerializer(data=request.data)
     if serializer.is_valid():
@@ -551,36 +551,6 @@ def submit_payment_info(request):
     payment.save()
 
     return Response({"message": "Payment confirmed successfully."}, status=status.HTTP_200_OK)
-
-@swagger_auto_schema(
-    methods=['post'],
-    tags=['Customer Actions'],
-    operation_summary='Generate report for all customers',
-    request_body=OTPSerializer,
-    manual_parameters=[
-        openapi.Parameter(
-            'Authorization',
-            in_=openapi.IN_HEADER,
-            type=openapi.TYPE_STRING,
-            required=True,
-            description='Token in the format "Token <token>"'
-        ),
-    ]
-)
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def otp_verify_view(request):
-    otp_serializer = OTPSerializer(data=request.data)
-    if otp_serializer.is_valid():
-        otp = otp_serializer.save()
-        if otp.is_valid():
-            invoice = otp.payment.invoice
-            invoice.currentpayment = "PAID"
-            invoice.save()
-            return Response({'status': 'Payment successful.'}, status=status.HTTP_200_OK)
-        else:
-            return Response({'error': 'Invalid OTP code.'}, status=status.HTTP_400_BAD_REQUEST)
-    return Response(otp_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 

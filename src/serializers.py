@@ -189,20 +189,6 @@ class Client_ViewSerializer(serializers.ModelSerializer):
 
 
 
-class WasteSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = Waste
-        fields = ['id', 'user', 'waste_type', 'quantity', 'waste_frequency', 'disposal_cost']
-
-
-class SupportSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Support
-        fields = ['id', 'name', 'email', 'phone_number', 'message']
-
-
-
 class CustomerReportSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomerReport
@@ -220,7 +206,7 @@ class PaymentSerializer(serializers.ModelSerializer):
     full_name = serializers.ReadOnlyField(source='user.get_full_name')
 
     class Meta:
-        model = Payment
+        model = CreatePayment
         fields = ['id', 'full_name', 'month', 'amount_to_pay', 'payment_date']
         read_only_fields = ['id', 'month', 'amount_to_pay', 'payment_date']
 
@@ -231,17 +217,6 @@ class PaymentSerializer(serializers.ModelSerializer):
         payment = Payment(user=user, month=month, amount_to_pay=amount_to_pay)
         payment.save()
         return payment
-
-
-
-
-
-class OTPSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = OTP
-        fields = '__all__'
-
-
 
 
 
