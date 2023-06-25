@@ -508,16 +508,6 @@ def create_payment(request):
         payment.amount_to_pay = amount_to_pay
         payment.payment_date = timezone.now()
         payment.save()
-
-        # Create a Stripe payment intent
-        intent = stripe.PaymentIntent.create(
-            amount=amount_to_pay * 100, # convert to cents
-            currency="usd",
-            payment_method_types=["card"],
-            metadata={
-                "payment_id": payment.id,
-            },
-        )
         return Response({
             'id':payment.id,
             'user': payment.user.full_name,
@@ -533,7 +523,7 @@ def create_payment(request):
 @swagger_auto_schema(
     methods=['post'],
     tags=['Customer Actions'],
-    request_body=PaymentSerializer,
+    request_body=ConfirmingSerializer,
     manual_parameters=[
         openapi.Parameter(
             'Authorization',
@@ -592,7 +582,7 @@ def submit_payment_info(request):
 @swagger_auto_schema(
     methods=['post'],
     tags=['Customer Actions'],
-    request_body=PaymentSerializer,
+    request_body=RequestPickUpSerializer,
     manual_parameters=[
         openapi.Parameter(
             'Authorization',
@@ -639,7 +629,7 @@ def all_my_request(request):
 @swagger_auto_schema(
     methods=['post'],
     tags=['Employee Actions'],
-    request_body=PaymentSerializer,
+    request_body=RequestPickUpSerializer,
     manual_parameters=[
         openapi.Parameter(
             'Authorization',
